@@ -1,8 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"flag"
-	"io/ioutil"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -12,7 +13,8 @@ import (
 var (
 	protoPath = flag.String("proto-path",
 		"/usr/share/xcb", "path to directory of X protocol XML files")
-	gofmt = flag.Bool("gofmt", true,
+	packageName = flag.String("package", "xkb", "name of package to generate")
+	gofmt       = flag.Bool("gofmt", true,
 		"When disabled, gofmt will not be run before outputting Go code")
 )
 
@@ -34,13 +36,8 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	if flag.NArg() != 1 {
-		log.Printf("A single XML protocol file can be processed at once.")
-		flag.Usage()
-	}
-
 	// Read the single XML file into []byte
-	xmlBytes, err := ioutil.ReadFile(flag.Arg(0))
+	xmlBytes, err := os.ReadFile(flag.Arg(0))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,16 +46,26 @@ func main() {
 	c := newContext()
 	c.Morph(xmlBytes)
 
+	outFile, err := os.Create(fmt.Sprintf("%s/%s.go", *packageName, *packageName))
+	if err != nil {
+		panic(err)
+	}
+	outFile.Truncate(0)
+	defer outFile.Close()
+	out := bufio.NewWriter(outFile)
+
 	if !*gofmt {
-		c.out.WriteTo(os.Stdout)
+		c.out.WriteTo(out)
 	} else {
 		cmdGofmt := exec.Command("gofmt")
 		cmdGofmt.Stdin = c.out
-		cmdGofmt.Stdout = os.Stdout
+		cmdGofmt.Stdout = out
 		cmdGofmt.Stderr = os.Stderr
 		err = cmdGofmt.Run()
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
+
+	out.Flush()
 }
