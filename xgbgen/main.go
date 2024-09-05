@@ -36,6 +36,11 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
+	if flag.NArg() != 1 {
+		log.Printf("A single XML protocol file can be processed at once.")
+		flag.Usage()
+	}
+
 	// Read the single XML file into []byte
 	xmlBytes, err := os.ReadFile(flag.Arg(0))
 	if err != nil {
@@ -48,9 +53,8 @@ func main() {
 
 	outFile, err := os.Create(fmt.Sprintf("%s/%s.go", *packageName, *packageName))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	outFile.Truncate(0)
 	defer outFile.Close()
 	out := bufio.NewWriter(outFile)
 
