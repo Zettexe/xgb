@@ -49,11 +49,11 @@ install: bigreq.i composite.i damage.i dpms.i dri2.i ge.i glx.i randr.i \
 
 %.xml: build-xgbgen
 	mkdir -p $(subst _,,$*)
-	xgbgen/xgbgen --package $(subst _,,$*) --proto-path $(XPROTO) $(XPROTO)/$*.xml
+	xgbgen/xgbgen --output-package $(subst _,,$*) --proto-path $(XPROTO) $(XPROTO)/$*.xml
 
 %.delve: build-xgbgen
 	mkdir -p $(subst _,,$*)
-	dlv debug github.com/jezek/xgb/xgbgen -- --package $(subst _,,$*) --gofmt=false --proto-path $(XPROTO) $(XPROTO)/$*.xml
+	dlv debug github.com/jezek/xgb/xgbgen -- --output-package $(subst _,,$*) --gofmt=false --proto-path $(XPROTO) $(XPROTO)/$*.xml
 
 # Just test the xproto core protocol for now.
 test:

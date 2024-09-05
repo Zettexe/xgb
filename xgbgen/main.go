@@ -12,10 +12,8 @@ import (
 var (
 	protoPath = flag.String("proto-path",
 		"/usr/share/xcb", "path to directory of X protocol XML files")
-	packageName = flag.String("package",
-		"xkb", "name of package to generate in the format (package)/(package).go")
-	stdout = flag.Bool("stdout", false,
-		"pipe the output of the program to stdout instead of a generated file")
+	outputPackage = flag.String("output-package",
+		"", "name of package to generate in the format (package)/(package).go")
 	gofmt = flag.Bool("gofmt", true,
 		"When disabled, gofmt will not be run before outputting Go code")
 )
@@ -54,8 +52,8 @@ func main() {
 	c.Morph(xmlBytes)
 
 	out := os.Stdout
-	if !*stdout {
-		out, err = os.Create(fmt.Sprintf("%s/%s.go", *packageName, *packageName))
+	if *outputPackage != "" && *outputPackage != "-" {
+		out, err = os.Create(fmt.Sprintf("%s/%s.go", *outputPackage, *outputPackage))
 		if err != nil {
 			log.Fatal(err)
 		}
