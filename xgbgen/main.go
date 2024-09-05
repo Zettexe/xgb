@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -13,8 +12,11 @@ import (
 var (
 	protoPath = flag.String("proto-path",
 		"/usr/share/xcb", "path to directory of X protocol XML files")
-	packageName = flag.String("package", "xkb", "name of package to generate")
-	gofmt       = flag.Bool("gofmt", true,
+	packageName = flag.String("package",
+		"xkb", "name of package to generate in the format (package)/(package).go")
+	stdout = flag.Bool("stdout", false,
+		"pipe the output of the program to stdout instead of a generated file")
+	gofmt = flag.Bool("gofmt", true,
 		"When disabled, gofmt will not be run before outputting Go code")
 )
 
@@ -51,12 +53,14 @@ func main() {
 	c := newContext()
 	c.Morph(xmlBytes)
 
-	outFile, err := os.Create(fmt.Sprintf("%s/%s.go", *packageName, *packageName))
-	if err != nil {
-		log.Fatal(err)
+	out := os.Stdout
+	if !*stdout {
+		out, err = os.Create(fmt.Sprintf("%s/%s.go", *packageName, *packageName))
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer out.Close()
 	}
-	defer outFile.Close()
-	out := bufio.NewWriter(outFile)
 
 	if !*gofmt {
 		c.out.WriteTo(out)
@@ -70,6 +74,4 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-
-	out.Flush()
 }
